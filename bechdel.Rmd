@@ -1,0 +1,116 @@
+---
+title: "Bechdel"
+author: "Aurélien Nicosia"
+date: "2022-08-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Dans cette mini-analyse, nous travaillons avec les données utilisées dans l'histoire de FiveThirtyEight intitulée ["The Dollar-And-Cents Case Against Hollywood's Exclusion of Women"](https://fivethirtyeight.com/features/the-dollar-and-cents-case-against-hollywoods-exclusion-of-women/).
+Votre tâche consiste à remplir les blancs indiqués par `___`.
+
+## Données et packages
+
+Nous commençons par charger les packages que nous allons utiliser.
+
+```{r load-packages, message=FALSE}
+library(fivethirtyeight)
+library(tidyverse)
+```
+
+L'ensemble de données contient des informations sur les films `r nrow(bechdel)` sortis entre `r min(bechdel$year)` et `r max(bechdel$year)`.
+Cependant, nous concentrerons notre analyse sur les films sortis entre 1990 et 2013.
+
+```{r}
+bechdel90_13 <- bechdel %>% 
+  filter(between(year, 1990, 2013))
+```
+
+Il y a `1615` de tels films.
+
+Les variables financières sur lesquelles nous allons nous concentrer sont les suivantes :
+
+-   `budget_2013` : budget en dollars de 2013 corrigé de l'inflation
+-   `domgross_2013` : brut intérieur (États-Unis) en dollars corrigés de l'inflation de 2013
+-   `intgross_2013` : Total international (c'est-à-dire mondial) brut en dollars de 2013 corrigés de l'inflation
+
+Et nous utiliserons également les variables `binary` et `clean_test` pour le **groupement**.
+
+## Une analyse
+
+Examinons comment le budget médian et le budget brut varient selon que le film a réussi ou non le test de Bechdel, qui est stocké dans la variable "binaire".
+
+```{r message = FALSE}
+bechdel90_13 %>%
+  group_by(binary) %>%
+  summarise(med_budget = median(budget_2013),
+            med_domgross = median(domgross_2013, na.rm = TRUE),
+            med_intgross = median(intgross_2013, na.rm = TRUE))
+```
+
+Examinons ensuite comment le budget médian et le brut varient selon un indicateur plus détaillé du résultat du test de Bechdel.
+Ces informations sont stockées dans la variable `clean_test`, qui prend les valeurs suivantes :
+
+-   `ok` = passe le test
+-   "douteux"
+-   `men` = les femmes ne parlent que des hommes
+-   `notalk` = les femmes ne se parlent pas
+-   `nowomen` = moins de deux femmes
+
+```{r message = FALSE}
+bechdel90_13 %>%
+  #group_by(___) %>%
+  summarise(med_budget = median(budget_2013),
+            med_domgross = median(domgross_2013, na.rm = TRUE),
+            med_intgross = median(intgross_2013, na.rm = TRUE))
+```
+
+Afin d'évaluer comment le retour sur investissement varie entre les films qui réussissent et échouent le test de Bechdel, nous allons d'abord créer une nouvelle variable appelée `roi` comme le rapport entre le brut et le budget.
+
+```{r}
+bechdel90_13 <- bechdel90_13 %>%
+  mutate(roi = (intgross_2013 + domgross_2013) / budget_2013)
+```
+
+Voyons quels films ont le meilleur retour sur investissement.
+
+```{r}
+bechdel90_13 %>%
+  arrange(desc(roi)) %>% 
+  select(title, roi, year)
+```
+
+Vous trouverez ci-dessous une visualisation du retour sur investissement par résultat de test, mais il est difficile de voir les distributions en raison de quelques observations extrêmes.
+
+```{r warning = FALSE}
+ggplot(data = bechdel90_13, 
+       mapping = aes(x = clean_test, y = roi, color = binary)) +
+  geom_boxplot() +
+  labs(title = "Return on investment vs. Bechdel test result",
+       x = "Detailed Bechdel result",
+       y = "___",
+       color = "Binary Bechdel result")
+```
+
+Quels sont ces films avec des retours sur investissement *très* élevés ?
+
+```{r}
+bechdel90_13 %>%
+  filter(roi > 400) %>%
+  select(title, budget_2013, domgross_2013, year)
+```
+
+Zoomer sur les films avec `roi < ___` fournit une meilleure vue de la façon dont les médianes entre les catégories se comparent :
+
+```{r warning = FALSE}
+ggplot(data = bechdel90_13, mapping = aes(x = clean_test, y = roi, color = binary)) +
+  geom_boxplot() +
+  labs(title = "Return on investment vs. Bechdel test result",
+       subtitle = "___", # Something about zooming in to a certain level
+       x = "Detailed Bechdel result",
+       y = "Return on investment",
+       color = "Binary Bechdel result") +
+  coord_cartesian(ylim = c(0, 15))
+```

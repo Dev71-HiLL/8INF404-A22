@@ -1,0 +1,69 @@
+---
+title: "Travail 01 - Nom des animaux de compagnies"
+author: "Simon Duchesne, Thibault Masson"
+date: "2022-09-05"
+output: github_document
+---
+
+## Chargement librairies et données
+
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(openintro)
+library(knitr)
+```
+
+## Exercices
+
+### Exercice 1
+
+Il y a `r nrow(seattlepets)` animaux de compagnie dans l'ensemble de données.
+
+### Exercice 2
+
+Il y a `r ncol(seattlepets)` variables pour chaque animal.
+
+### Exercice 3
+
+Les 3 noms d'animaux les plus courants à Seatlle sont Lucy, Charlie et Luna.
+
+```{r most-common-names}
+names_data <- seattlepets %>%
+  drop_na(animal_name) %>%
+  count(animal_name, sort = TRUE, name = "count_name") %>%
+  top_n(count_name, n=3)
+kable(names_data)
+```
+
+### Exercice 4
+
+Les 5 noms les plus fréquents pour chaque espèce en ordre croissant par groupe :
+
+```{r noms-de-chats-chiens-les-plus-communs}
+seattlepets %>%
+  drop_na(animal_name) %>%
+  group_by(species) %>%
+  count(animal_name, sort = TRUE) %>%
+  slice_max(n, n = 5) %>%
+  arrange(species, n)
+```
+
+### Exercice 5
+
+```{r noms-commun}
+top_name_cat_dog <- seattlepets %>%
+  drop_na(animal_name) %>%
+  filter(species %in% c("Dog", "Cat")) %>%
+  group_by(species) %>%
+  count(animal_name, sort = TRUE, name = "count") %>%
+  pivot_wider(names_from = species, values_from = count) %>%
+  top_n(10)
+
+kable(top_name_cat_dog)
+```
+
+Lily et Oliver sont plus courants pour les chats que pour les chiens. Ce sont les noms situés en dessous de la ligne qui sont plus courants pour les chats que pour les chiens, car en dessous de la ligne, nous avons X > Y avec X étant la proportion de chats et Y la proportion de chiens.
+
+### Exercice 6
+
+La relation entre la proportion de chiens et de chats ayant un  même prénom est positive, car on observe bien que le nuage de points évolue positivement autour de la droite X = Y. Dans notre cas, cela signifie que si la proportion de chats portant un prénom augmente, alors la proportion de chiens portant ce même prénom augmentera également. Cela est aussi juste aussi dans le sens inverse : si un prénom devient moins populaire pour un chat, alors il sera aussi moins populaire pour un chien. Ainsi, s'il y a, par exemple, moins de chats qui se nomment Lily, alors il y aura aussi moins de chiens portant ce même nom, puisque la relation est positive et donc, dans le contexte, on peut en déduire que la popularité de ce prénom est en baisse.

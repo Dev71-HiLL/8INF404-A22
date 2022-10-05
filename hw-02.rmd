@@ -1,0 +1,78 @@
+---
+title: "Travail 02 - Annonces Airbnb à Édimbourg"
+author: "Vincent Monarque, Ahmad Chamouni, Isabelle St-Pierre, Victor Savard-Arseneault"
+date: "16/09/2022"
+output: github_document
+---
+
+## Chargement des libraries et données
+
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(dsbox)
+```
+
+## Des exercices
+
+### Exercice 1
+
+Il y a `r nrow(edibnb)` lignes dans la base de données `edibnb`.
+
+### Exercice 2
+
+Chaque ligne de l'ensemble de données représente un Airbnb et les informations qui lui sont associées.
+
+### Exercice 3
+
+Après avoir essayé la facet_grid en ligne et en colonnes, je me suis aperçu que les données sur l'axe des x était illisibles. Ainsi, en essayant `facet_wrap`, la visualisation était bien meilleure et étant donné que nous ne voulons que des facettes pour la variable `neighbourhood`, il est un peu inutile de faire une `facet_grid` ici.
+
+```{r prix-quartiers}
+ggplot(edibnb,
+  aes(x=price)) +
+  geom_histogram(binwidth = 10) +
+  facet_wrap(~neighbourhood, ncol = 4)
+```
+
+### Exercice 4
+
+J'ai conservé 7 valeurs au lieu de 5, car les valeurs de médianes 5, 6 et 7 sont équivalentes. Deux valeurs peuvent être retirées arbitrairement au besoin. J'ai mis les codes pour effectuer cette opération en commentaires.
+
+```{r top-5-median}
+edibnb %>% 
+  group_by(neighbourhood)%>%
+  summarise(Median = median(price, na.rm=TRUE)) %>% 
+  slice_max(Median, n = 5) #%>% 
+ #subset(neighbourhood!="Southside" & neighbourhood!="Marchmont")
+```
+
+```{r top-5-median-plot}
+edibnbgraph <-edibnb %>%
+  group_by(neighbourhood)%>%
+  mutate(Median = median(price, na.rm=TRUE))%>%
+  filter(Median >=80) #%>%
+   #subset(neighbourhood!="Southside" & neighbourhood!="Marchmont")
+
+ggplot(data = edibnbgraph, mapping = aes(x = price)) +
+ geom_histogram(binwidth = 50) +
+ facet_wrap(~neighbourhood, ncol =3)
+```
+
+Le prix moyen est plus élevé que la médiane; on peut en déduire qu'il y a plus de airbnb à prix en dessous de la moyenne qu'au-dessus. On peut aussi en déduire que l'écart entre les prix au-dessus de la médiane est plus élevé que ceux en dessous de la médiane. Ceci peut être observé sur les histogrammes: grandes barres regroupées au début et petites barres étalées en long en s'éloignant du 0.
+
+```{r top-5-median-summary-stats}
+edibnbgraph %>%
+  summarise(Minimum = min(price, na.rm=TRUE),Moyenne = mean(price, na.rm=TRUE),Median = median(price, na.rm =TRUE), écart_type = sd(price, na.rm =TRUE), IQR = IQR(price, na.rm =TRUE),Maximum = max(price, na.rm =TRUE))%>%
+  arrange(desc(Median))
+
+```
+
+### Exercice 5
+
+En général, les clients Airbnb accordent de bonnes évaluations.
+
+```{r review-scores-rating}
+ggplot(edibnb, aes(x = review_scores_rating, y = neighbourhood)) +
+  geom_boxplot() +
+  labs(title = "distribution des notes d’évaluation entre les quartiers",
+  x = "Notes d'évaluation", y = "Quartiers")
+```

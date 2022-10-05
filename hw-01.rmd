@@ -24,7 +24,8 @@ Il y a `r nrow(seattlepets)` animaux de compagnie dans l'ensemble de données.
 Il y a `r ncol(seattlepets)` variables pour chaque animal.
 
 ### Exercice 3
-
+``` 
+```
 Les 3 noms d'animaux les plus courants à Seatlle sont Lucy, Charlie et Luna.
 
 ```{r most-common-names}

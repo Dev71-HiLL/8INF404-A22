@@ -1,0 +1,63 @@
+---
+title: "Devoir 03 - Accidents de la route"
+author: "Tiffany Yaka / Aude Ngayap/ Fabrice Petiote / Jean-Phillipe Gagnon / Pierre-Olivier Gravel"
+date: "20-09-2022"
+output: github_document
+---
+
+## Chargement des librairies et des données
+
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(dsbox)
+```
+
+## Des exercices
+
+### Exercice 1
+
+Le nombre d'observations que contient l'ensemble de données est de: `r nrow(accidents)`.
+
+### Exercice 2
+
+Chaque ligne des views représente chacun des accidents ainsi que leurs particularités propres.
+
+### Exercice 3
+
+On remarque qu'il n'y a aucun accident fatale pendant la fin de semaine. Pour ce qui est du lundi au vendredi. On remarque que là où il y a le plus d'accident de toute sévérité est pendant les heures de pointes (8H AM et 16H PM).
+
+
+```{r Accident-report-plot}
+#Replace value to match Weekend or Weekday, test
+#accidents['day_of_week'][accidents["day_of_week"] != "Saturday" & accidents["day_of_week"] != "Sunday"] <- "Weekday"
+#accidents['day_of_week'][accidents["day_of_week"] == "Saturday" | accidents["day_of_week"] == "Sunday"] <- "Weekend"
+
+accidentsV2 <- accidents %>% mutate(accidents, days = case_when(
+  day_of_week == "Saturday" | 
+  day_of_week == "Sunday" ~ "Week-End",
+  TRUE ~ "WeekDay"))
+
+ggplot(accidentsV2, aes(x = time, fill = severity)) + 
+  geom_density(color = "black",alpha = 0.5) + 
+  facet_wrap(vars(days),ncol = 1) +
+  scale_fill_viridis_d() +
+  labs(title="Number of accidents thoughout the day",subtitle = "By day of week and severity",x = "Time of day",y = "Density") + 
+  theme_bw() +
+  theme(strip.background = element_blank(),panel.background = element_blank(),panel.border = element_blank())  
+ 
+  
+```
+
+### Exercice 4
+
+On remarque que la majorité des accidents se produisent tous entre les latitudes 55.92 et 55.96 et les longitudes -3.15 et -3.25. La journée de la semaine impacte peu le nombre d'accidents. On observe que peut importe le jour, la concentration est généralement au même emplacement.
+
+```{r Accident_location_plot}
+
+ggplot(accidents, aes(x = longitude, y = latitude, color = day_of_week)) + 
+  geom_point(alpha = 0.5) +
+  facet_wrap(vars(day_of_week)) +
+  labs(title = "Longitude and Latitude of accidents",
+       subtitle = "By day of week") +
+  scale_colour_viridis_d() 
+```

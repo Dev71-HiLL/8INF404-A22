@@ -1,0 +1,158 @@
+---
+title: "Devoir 04 - Dans quoi devrais-je me spécialiser?"
+author: "Pierre-Olivier Gravel & Jean-Philippe Gagnon"
+date: "2022-09-29"
+output: github_document
+---
+
+## Chargement librairies et données
+
+```{r load-packages, message = FALSE}
+library(tidyverse)
+library(scales)
+library(fivethirtyeight)
+```
+
+## Exercices
+
+### Exercice 1
+
+``` {r top3_major plot}
+college_recent_grads %>% 
+  arrange(sharewomen) %>%
+  select(major,total,sharewomen) %>% 
+  mutate(sharewomen = percent(sharewomen)) %>%
+  top_n(3)
+```
+
+### Exercice 2
+
+Nous choisissons souvent la médiane au lieu de la moyenne puisque la médianne est moins sensible aux valeurs extrêmes, ça permet donc d'avoir une meilleurs représentation des données, une représentation plus réaliste.
+
+``` {r revenue-plot }
+majorGroup <- college_recent_grads %>% group_by(major_category)
+
+ggplot(data = majorGroup,mapping = aes(x = median,fill=major_category)) + 
+  geom_histogram(color="white") + 
+  scale_fill_viridis_d() +
+  guides(fill=guide_legend(title="Catégories")) + 
+  labs(title = "Salaires médians ",
+       subtitle = "selon la catégorie de majeur",
+       x = "Salaires",
+       y = "Densité")
+```
+
+### Exercice 3
+
+``` {r revenue-binwidth-plot }
+majorGroup <- college_recent_grads %>% group_by(major_category)
+
+ggplot(data = majorGroup,mapping = aes(x = median,fill=major_category)) + 
+  geom_histogram(color="white",binwidth = 5000) + 
+  scale_fill_viridis_d() +
+  guides(fill=guide_legend(title="Catégories")) + 
+  labs(title = "Salaires médians selon la catégorie de majeur",
+       x = "Salaires",
+       y = "Densité")
+
+college_recent_grads %>% summarise(min=min(median),max= max(median),mean= mean(median),med= median(median),sd= sd(median),q1=quantile(median,probs =0.25),q3 =quantile(median,probs =0.75))
+
+```
+
+### Exercice 4
+
+Avec l'histogramme généré dans l'exercice 4, on remarque que les salaires sont concentrés entre 30 000 et 45 000. Cette contration est majoritairement constitué de majeures dans des domaines d'études populaires comme l'éducation, business, la santé, etc. il y a une très petite quantité de majeures ou les salaires atteignent 65 000 à 100 000, ces majeures sont dans des domaines comme l'ingénierie.
+...
+
+### Exercice 5
+
+```{r category-median-plot}
+
+ggplot(college_recent_grads, aes(x = median, fill = major_category)) +
+  geom_histogram(color = 'white', binwidth = 5000) +
+  scale_fill_viridis_d() +
+  facet_wrap(vars(major_category)) +
+  guides(fill = guide_legend(title = "Catégories")) + 
+  labs(title = "Salaires médians ",
+       subtitle = "selon la catégorie de majeur",
+       x = "Salaires",
+       y = "Densité")
+```
+
+### Exercice 6
+
+```{r highest-salary}
+college_recent_grads %>% 
+    group_by(major_category) %>%
+    summarise(med = max(median)) %>%
+    arrange(desc(med))
+
+```
+
+### Exercice 7
+```{r most-popular-major}
+college_recent_grads %>% 
+  count(major_category) %>%
+  arrange(desc(n))
+
+```
+
+### Exercice 8
+```{r stem-plot}
+all_major_median <- college_recent_grads %>% summarise(avg = round(mean(median),digits = 0))
+
+stem_categories <- c(
+  "Biology & Life Science",
+  "Computers & Mathematics",
+  "Engineering",
+  "Physical Sciences")
+
+college_recent_grads <- college_recent_grads %>%
+  mutate(major_type = ifelse(major_category %in% stem_categories,"stem","not stem"))
+
+college_recent_grads %>% 
+  filter(major_type == "stem",median <= all_major_median[["avg"]]) %>%
+  arrange(desc(median)) %>%
+  select(major,median,p25th,p75th)
+```
+### Exercice 9
+Avec le graphique de dispersion suivant, on remarque que la majorité des femmes sont dans des majeurs qui ne font pas parti du STEM. Les salaires médians sont plus bas pour les majeurs qui ne font pas parti du STEM et à l'inverse, les majeurs du STEM ont un salaire médian plus élevé.
+```{r women-dispersion-stem-major-plot}
+
+stem_categories <- c(
+  "Biology & Life Science",
+  "Computers & Mathematics",
+  "Engineering",
+  "Physical Sciences")
+
+college_recent_grads <- college_recent_grads %>%
+  mutate(major_type = ifelse(major_category %in% stem_categories,"stem","not stem"))
+
+college_recent_grads %>% 
+  filter(major_type == "stem") 
+
+ggplot(data = college_recent_grads,aes(x = median,y=sharewomen,color=ifelse(major_type == "stem","green","black"),size=sharewomen)) +
+  geom_point(alpha=0.5) + 
+  guides(color=guide_legend(title="STEM")) +
+   scale_color_viridis_d(labels=c("Non","Oui")) + 
+  labs(title="Proportion de femmes dans des majeurs STEM",subtitle = "Selon leur salaires médians",x="Salaire médian",y="Proportion de femmes")
+
+```
+### Exercice 10
+
+Quel majeur en informatique et mathématique a le plus bas taux de positionement, de ce que nous pouvons constater avec ce graphique de comparaison, c'est celui en résautage et télécommunication.
+
+```{r employement-rate-computer-and-math}
+
+  ggplot(college_recent_grads %>% filter(major_category == "Computers & Mathematics"), aes(x = major, y = (1 - unemployment_rate), color = major)) + 
+  geom_point() + 
+  geom_segment(aes(x=major, xend=major, y=0, yend=(1 - unemployment_rate))) +
+  coord_flip() +
+  scale_color_viridis_d() + 
+  guides(color = FALSE) +
+  labs(title = "Taux de positionnement",
+       subtitle = "selon les majeurs en informatique et mathématique",
+       x = "Majeurs",
+       y = "Pourcentage (%)")
+
+```
